@@ -1,0 +1,61 @@
+# Netlify Configuration for IWSM Website
+[build]
+  command = "node tools/prepare-site-seo.cjs"
+  # Static site published directly from root
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/reviews"
+  to = "/reviews.html"
+  status = 200
+
+# ─── Security headers ────────────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Clickjacking / framing
+    X-Frame-Options = "SAMEORIGIN"
+
+    # MIME sniffing protection
+    X-Content-Type-Options = "nosniff"
+
+    # Referrer leakage
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Force HTTPS for 1 year, include subdomains
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+
+    # Disable unnecessary browser features
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=(), interest-cohort=()"
+
+    # Cross-origin isolation (allows SharedArrayBuffer if ever needed; also restricts cross-origin embedding)
+    Cross-Origin-Opener-Policy = "same-origin-allow-popups"
+    Cross-Origin-Resource-Policy = "same-site"
+
+    # Content-Security-Policy
+    # - default-src 'self': only load from own origin
+    # - script-src: allow own scripts + Supabase CDN + Spline runtime (3D hero)
+    # - connect-src: allow Supabase API, Netlify functions, WhatsApp wa.me
+    # - img-src: allow data URIs (SVG/canvas) + HTTPS images
+    # - frame-src: block all framing of external content
+    # - object-src 'none': no Flash/plugins
+    # - base-uri 'self': prevent base tag injection
+    # - form-action 'self': forms only POST to same origin
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com https://prod.spline.design https://cdn.spline.design; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.supabase.co https://api.supabase.co https://script.google.com https://wa.me https://api.yahoofinance.com wss://*.supabase.co; img-src 'self' data: https: blob:; media-src 'self' blob: https://prod.spline.design; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests"
+
+# ─── Cache static assets ─────────────────────────────────────────────────────
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/js/vendor/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
